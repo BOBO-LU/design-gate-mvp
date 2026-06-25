@@ -56,3 +56,10 @@ implementation 完成後查看 `git diff`,確認無誤再核准:
 ```text
 /design-gate:approve-implementation TASK-123
 ```
+
+## 移除 plugin
+
+```bash
+claude plugin uninstall design-gate@team-engineering-standards
+claude plugin marketplace remove team-engineering-standards
+```
