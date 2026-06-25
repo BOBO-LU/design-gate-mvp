@@ -25,6 +25,14 @@ cd design-gate-mvp
 
 在目標 repository 直接開始(gate 會自動生效)。
 
+### 0. 客製化設定(選用)
+
+Gate 預設值內建,不需初始化。若要客製化規則,先執行 `/design-gate:init` 產生 `.design-gate/config.json`。
+
+```text
+/design-gate:init
+```
+
 ### 1. 開始一個 task
 
 ```text
@@ -48,7 +56,3 @@ implementation 完成後查看 `git diff`,確認無誤再核准:
 ```text
 /design-gate:approve-implementation TASK-123
 ```
-
-## 設定(選用)
-
-Gate 預設值內建,不需初始化。若要客製化規則,先執行 `/design-gate:init` 產生 `.design-gate/config.json`。
