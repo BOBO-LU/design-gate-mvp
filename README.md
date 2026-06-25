@@ -12,7 +12,7 @@
 ```bash
 git clone git@github.com:yehjunwei/design-gate-mvp.git
 cd design-gate-mvp
-./install.sh "$PWD"
+./install.sh
 ```
 
 然後在 Claude Code 執行：
