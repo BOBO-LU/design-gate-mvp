@@ -34,4 +34,4 @@ cd design-gate-mvp
 
 ## 設定（選用）
 
-Gate 預設值內建,不需初始化即可用。若要客製化規則,在目標 repo 的 Claude Code 內執行 `/design-gate:design-gate` 時會自動建立 `.design-gate/config.json`（預設 function 不超過 40 行,warning-only，不 hard block）。建議 commit `config.json` 與 `docs/designs/`，將 `state.json` 加入 `.gitignore`。
+Gate 預設值內建,不需初始化即可用。若要客製化規則,在目標 repo 的 Claude Code 內執行 `/design-gate:init`,會建立 `.design-gate/config.json`（預設 function 不超過 40 行,warning-only，不 hard block）與 `docs/designs/`。建議 commit `config.json` 與 `docs/designs/`，將 `state.json` 加入 `.gitignore`。
