@@ -6,12 +6,12 @@ PLUGIN_NAME="design-gate"
 SOURCE="${1:-}"
 
 if ! command -v claude >/dev/null 2>&1; then
-  echo "ERROR: 找不到 Claude Code CLI。" >&2
+  echo "ERROR: Claude Code CLI not found." >&2
   exit 1
 fi
 
 if [[ -z "$SOURCE" ]]; then
-  # script 所在目錄即 marketplace 時直接用它
+  # If the script's own directory is the marketplace, use it directly.
   HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -f "$HERE/.claude-plugin/marketplace.json" ]]; then
     SOURCE="$HERE"
@@ -29,8 +29,8 @@ claude plugin marketplace add "$SOURCE"
 echo "Installing plugin: ${PLUGIN_NAME}@${MARKETPLACE_NAME}"
 claude plugin install "${PLUGIN_NAME}@${MARKETPLACE_NAME}"
 
-# Dev mode: 把 cache 內的複製品換成指向 repo 的 symlink,改 code 即時生效。
-# 只有本地路徑安裝才適用;github/git-url 安裝沒有本地 plugin 目錄,自動跳過。
+# Dev mode: replace the copy in the cache with a symlink to the repo, so code changes take effect immediately.
+# Only applies to local-path installs; github/git-url installs have no local plugin directory and are skipped automatically.
 PLUGIN_SRC="$SOURCE/plugins/${PLUGIN_NAME}"
 if [[ -d "$PLUGIN_SRC" ]]; then
   INSTALL_PATH="$(python3 - "$PLUGIN_NAME" "$MARKETPLACE_NAME" <<'PY'
@@ -50,14 +50,14 @@ fi
 
 cat <<'EOF'
 
-Design Gate 安裝完成。
+Design Gate installation complete.
 
-重新載入 plugin：
+Reload the plugin:
   /reload-plugins
 
-每個 repository 第一次使用時：
+The first time you use it in each repository:
   python3 "${CLAUDE_PLUGIN_ROOT}/scripts/design_gate.py" init
 
-開始任務：
-  /design-gate:design-gate TASK-123 <需求>
+Start a task:
+  /design-gate:design-gate TASK-123 <requirement>
 EOF

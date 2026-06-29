@@ -1,33 +1,33 @@
-# Feature Design：<title>
+# Feature Design: <title>
 
 ## Metadata
 
-- Task ID：
-- Complexity：L1 / L2 / L3
-- Status：DESIGN
-- Created：
-- Design approved by：
-- Design approved at：
+- Task ID:
+- Complexity: L1 / L2 / L3
+- Status: DESIGN
+- Created:
+- Design approved by:
+- Design approved at:
 
 ## 1. Problem
 
-要解決什麼問題？
+What problem are we solving?
 
 ## 2. Goal
 
-完成後應該達成什麼結果？
+What outcome should be achieved when this is done?
 
 ## 3. Non-goal
 
-這次明確不處理什麼？
+What is explicitly out of scope this time?
 
 ## 4. Existing behavior
 
-目前系統如何運作？相關 code path、interface 與 constraints 是什麼？
+How does the system currently work? What are the relevant code paths, interfaces, and constraints?
 
 ## 5. Reuse candidates
 
-| Existing component | Location | 是否 reuse | 原因 |
+| Existing component | Location | Reuse? | Reason |
 |---|---|---|---|
 
 ## 6. Proposed design
@@ -39,10 +39,10 @@
 
 ### Functions
 
-| Function | Responsibility | Input / Output | 預估有效行數 |
+| Function | Responsibility | Input / Output | Estimated effective lines |
 |---|---|---|---:|
 
-Function 預設不超過 40 行有效邏輯。
+By default, functions should not exceed 40 lines of effective logic.
 
 ### Data flow
 
@@ -55,7 +55,7 @@ flowchart LR
 
 ### Error flow
 
-說明 validation error、domain error、external error 如何傳遞與處理。
+Describe how validation errors, domain errors, and external errors propagate and are handled.
 
 ## 7. Files in scope
 
@@ -65,14 +65,14 @@ flowchart LR
 
 ### Delete
 
-未列出的 file 原則上不在本次 scope。
+Files not listed here are, in principle, out of scope this time.
 
 ## 8. Test strategy
 
 | Test | Level | Scenario | Expected result |
 |---|---|---|---|
 
-至少考慮：
+Consider at least:
 
 - normal case
 - boundary case
@@ -81,7 +81,7 @@ flowchart LR
 
 ## 9. Minimal solution
 
-最小且安全的解法是什麼？為什麼不需要更複雜的 abstraction？
+What is the smallest, safest solution? Why is a more complex abstraction unnecessary?
 
 ## 10. Risks / Trade-offs
 
@@ -91,14 +91,14 @@ flowchart LR
 
 ## 13. 40-line exception
 
-沒有例外時填 `None`。
+Write `None` when there is no exception.
 
-若有例外，列出 function 名稱與不拆分的具體原因。
+If there is an exception, list the function name and the specific reason for not splitting it.
 
 ## 14. Approval
 
-Status：PENDING
+Status: PENDING
 
-Approval command：
+Approval command:
 
 `/design-gate:approve-design <task-id>`

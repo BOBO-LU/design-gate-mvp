@@ -1,28 +1,28 @@
 ---
 name: Design Gate
 description: >
-  當使用者要求 implementation、feature development、bug fix、refactoring、
-  migration、integration、optimization、code change、實作、新增功能、修正、
-  修改、重構或移除程式碼時，使用這個 Skill。先釐清需求與既有設計，
-  產生 design document，取得明確 human approval 後才開始 coding；
-  完成後要求 human review 實際 diff。
+  Use this Skill when the user requests implementation, feature development,
+  bug fix, refactoring, migration, integration, optimization, or any code
+  change. First clarify the requirements and the existing design, produce a
+  design document, obtain explicit human approval before any coding begins,
+  and request a human review of the actual diff once done.
 effort: high
 ---
 
 # Design Gate
 
-這是一套低摩擦的 design-first 開發流程。
+This is a low-friction, design-first development workflow.
 
-目標不是製造文件或增加官僚程序，而是避免：
+The goal is not to manufacture documents or add bureaucracy, but to avoid:
 
-- 還沒理解需求就開始 coding
-- Claude 自行補完未確認的 requirement
-- implementation 超出原本 scope
-- function 過長、責任混雜
-- 重複實作既有邏輯
-- 工程師只看 Claude summary，沒有 review 實際 diff
+- Starting to code before understanding the requirements
+- Claude filling in unconfirmed requirements on its own
+- Implementation drifting beyond the original scope
+- Functions that are too long or mix responsibilities
+- Re-implementing logic that already exists
+- Engineers reading only Claude's summary instead of reviewing the actual diff
 
-請閱讀：
+Please read:
 
 - `${CLAUDE_SKILL_DIR}/references/design-template.md`
 - `${CLAUDE_SKILL_DIR}/references/coding-standards.md`
@@ -30,138 +30,138 @@ effort: high
 
 ## Workflow
 
-狀態依序為：
+The states proceed in order:
 
 `DISCOVERY -> DESIGN -> DESIGN_APPROVED -> IMPLEMENTATION -> AWAITING_HUMAN_REVIEW -> COMPLETED`
 
-不得跳過狀態，也不得自行假設 human approval 已經發生。
+States must not be skipped, and you must not assume that human approval has already happened.
 
 ## 1. DISCOVERY
 
-開始 coding 前：
+Before starting to code:
 
-1. 用簡短文字重述問題、目標與限制。
-2. 閱讀相關 production code、test、interface、configuration 與 documentation。
-3. 找出既有可 reuse 的 function、class、module、pattern 與 test fixture。
-4. 區分：
-   - 已確認事實
-   - assumption
-   - open question
-   - non-goal
-5. 只詢問真正會影響設計的問題，通常每輪 2–4 題。
-6. 小改動不需要長篇討論；只要把關鍵決策說清楚。
+1. Restate the problem, goals, and constraints in a few sentences.
+2. Read the relevant production code, tests, interfaces, configuration, and documentation.
+3. Identify existing functions, classes, modules, patterns, and test fixtures that can be reused.
+4. Distinguish between:
+   - confirmed facts
+   - assumptions
+   - open questions
+   - non-goals
+5. Ask only questions that genuinely affect the design, usually 2–4 per round.
+6. Small changes do not need lengthy discussion; just state the key decisions clearly.
 
 ### Complexity
 
-- `L0`：comment、typo、formatting、documentation-only，不改變 runtime behavior。
-- `L1`：局部 bug fix、小型內部修改。
-- `L2`：新功能、public API、class responsibility 或 data flow 改變。
-- `L3`：跨 service、persistence、security、concurrency 或 architecture 改變。
+- `L0`: comments, typos, formatting, documentation-only — no change to runtime behavior.
+- `L1`: localized bug fix, small internal change.
+- `L2`: new feature, public API, class responsibility, or data flow change.
+- `L3`: cross-service, persistence, security, concurrency, or architecture change.
 
-`L1` 可以使用 lightweight design；`L2/L3` 使用完整 design。
+`L1` may use a lightweight design; `L2/L3` use a full design.
 
 ## 2. DESIGN
 
-建立：
+Create:
 
 `docs/designs/<task-id>-<feature-name>.md`
 
-Design document 至少要說明：
+The design document must at least cover:
 
-- problem、goal、non-goal
+- problem, goal, non-goal
 - existing behavior
 - reuse candidates
-- proposed class/function responsibility
-- data flow 與 error flow
-- 預計修改的 files
+- proposed class/function responsibilities
+- data flow and error flow
+- files expected to be modified
 - test strategy
-- 最小可行方案
-- risk 與 open question
+- the minimal viable solution
+- risks and open questions
 
 ### Function design
 
-每個 function 應只有一個清楚責任。
+Each function should have a single clear responsibility.
 
-預設每個 function 不超過 **40 行有效邏輯**：
+By default, each function should not exceed **40 lines of effective logic**:
 
-- 不計空白行
-- 不計 comment-only line
-- 不計 function signature
-- 不應為了湊行數而機械式切割
-- 應依照 coherent responsibility 拆分
+- blank lines are not counted
+- comment-only lines are not counted
+- the function signature is not counted
+- do not split mechanically just to hit a line count
+- split along coherent responsibilities
 
-若單一 function 確實超過 40 行更清楚，必須在 design document 寫明原因，並讓 human 一起核准。
+If a single function is genuinely clearer above 40 lines, you must state the reason in the design document and have a human approve it.
 
 ### Design approval
 
-完成 design 後停止，不得開始修改 production code。
+Once the design is complete, stop; you must not begin modifying production code.
 
-請要求 human 明確執行：
+Ask the human to explicitly run:
 
 `/design-gate:approve-design <task-id>`
 
-以下文字不得當成正式 approval：
+The following must not be treated as formal approval:
 
-- 繼續
-- 看起來可以
-- 沒問題
+- continue
+- looks good
+- no problem
 - go ahead
 - proceed
 
 ## 3. IMPLEMENTATION
 
-取得 approval 後才開始 coding。
+Begin coding only after approval.
 
-實作時遵守：
+While implementing, follow these rules:
 
-1. 只做 approved design 中描述的內容。
-2. 不做未在 design 內的 cleanup、rename、dependency upgrade、generalization 或新功能。
-3. 優先 reuse 語意相同的既有 function、class、module 或 pattern。
-4. 不為了表面消除重複而錯誤抽象不同概念。
-5. function、class、module 都維持 Single Responsibility。
-6. function 預設不超過 40 行有效邏輯。
-7. orchestration、domain logic、I/O side effect 儘量分離。
-8. public API、error contract 與 backward compatibility 必須符合 design。
-9. 加入 design 中定義的 normal、boundary、failure 與 regression tests。
-10. 不得刪除、skip 或弱化 test 來讓錯誤 implementation 通過。
-11. 不得隱藏 lint、type-check、build 或 test failure。
+1. Do only what the approved design describes.
+2. Do not perform cleanup, renames, dependency upgrades, generalization, or new features that are not in the design.
+3. Prefer reusing existing functions, classes, modules, or patterns with the same semantics.
+4. Do not wrongly abstract distinct concepts just to superficially remove duplication.
+5. Keep functions, classes, and modules to a Single Responsibility.
+6. By default, functions should not exceed 40 lines of effective logic.
+7. Separate orchestration, domain logic, and I/O side effects as much as possible.
+8. Public APIs, error contracts, and backward compatibility must match the design.
+9. Add the normal, boundary, failure, and regression tests defined in the design.
+10. Do not delete, skip, or weaken tests to let an incorrect implementation pass.
+11. Do not hide lint, type-check, build, or test failures.
 
-如果 implementation 發現 design 必須重大改變：
+If implementation reveals that the design must change substantially:
 
-1. 停止 coding。
-2. 更新 design document。
-3. 說明 deviation 與原因。
-4. 回到 `DESIGN`。
-5. 重新取得 approval。
+1. Stop coding.
+2. Update the design document.
+3. Explain the deviation and its reasons.
+4. Return to `DESIGN`.
+5. Obtain approval again.
 
 ## 4. HUMAN REVIEW
 
-Implementation 完成後：
+After implementation is complete:
 
-1. 執行適用的 formatter、linter、type checker、build 與 tests。
-2. 執行：
+1. Run the applicable formatter, linter, type checker, build, and tests.
+2. Run:
    `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/design_gate.py" check`
-3. 顯示：
+3. Show:
    - `git status --short`
    - changed files
-   - diff summary
-   - tests 與 commands executed
-   - warning / failure
-   - deviations from design
+   - a diff summary
+   - tests and commands executed
+   - warnings / failures
+   - deviations from the design
    - known limitations
-4. 將狀態設為 `AWAITING_HUMAN_REVIEW`。
-5. 明確要求 human 查看實際 `git diff`。
-6. Human review 完成後執行：
+4. Set the status to `AWAITING_HUMAN_REVIEW`.
+5. Explicitly ask the human to inspect the actual `git diff`.
+6. After the human review is complete, run:
 
 `/design-gate:approve-implementation <task-id>`
 
-在此之前不得宣稱 task 已完成。
+Do not claim the task is complete before this.
 
-## 語言規則
+## Language rules
 
-- 與使用者對話：繁體中文
-- Design document：繁體中文
-- 程式碼 identifier：英文
-- Code comment：遵循 repository 現有慣例；無慣例時使用英文
-- Commit message：遵循 repository 現有慣例
-- Status、command、JSON key、file path：保留英文
+- Conversation with the user: English
+- Design document: English
+- Code identifiers: English
+- Code comments: follow the repository's existing conventions; use English when there is no convention
+- Commit messages: follow the repository's existing conventions
+- Status, commands, JSON keys, file paths: keep in English

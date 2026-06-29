@@ -1,7 +1,7 @@
 {
   "name": "design-gate",
   "version": "0.1.0",
-  "description": "低摩擦的 design-first、human-gated software development workflow。",
+  "description": "Low-friction, design-first, human-gated software development workflow.",
   "author": {
     "name": "Tony Yeh"
   },

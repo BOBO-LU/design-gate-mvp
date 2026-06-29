@@ -1,16 +1,16 @@
 ---
 name: Approve Implementation
-description: Human 查看實際 diff 並完成 review checklist 後，記錄 final implementation approval。
+description: Record the final implementation approval after a human has inspected the actual diff and completed the review checklist.
 disable-model-invocation: true
 allowed-tools: Bash(python3 *)
 ---
 
-為 task `$ARGUMENTS` 記錄 final implementation approval。
+Record the final implementation approval for task `$ARGUMENTS`.
 
-執行：
+Run:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/design_gate.py" approve-implementation "$ARGUMENTS"
 ```
 
-只有 human 明確 invoke 此 Skill 時才能執行。
+This may only run when a human explicitly invokes this Skill.

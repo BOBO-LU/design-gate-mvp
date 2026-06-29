@@ -18,6 +18,7 @@ STATE_FILE = "state.json"
 CONFIG_FILE = "config.json"
 
 DEFAULT_CONFIG = {
+    "enabled": True,
     "max_function_lines": 40,
     "function_length_mode": "warn",
     "allowed_before_approval": ["docs/designs/", ".design-gate/"],
@@ -129,6 +130,8 @@ def handle_pre_tool(payload: Dict[str, Any]) -> None:
     project = project_dir(payload)
     state = load_state(project)
     config = load_config(project)
+    if not config.get("enabled", True):  # per-project off-switch via .design-gate/config.json
+        return
     status = state.get("status", "IDLE")
 
     if status in {"DESIGN_APPROVED", "IMPLEMENTATION", "AWAITING_HUMAN_REVIEW", "COMPLETED"}:
@@ -147,9 +150,10 @@ def handle_pre_tool(payload: Dict[str, Any]) -> None:
         rel = relative_path(project, str(file_value))
         if not is_allowed_before_approval(rel, config):
             emit_deny(
-                "Design Gate：design 尚未核准。此階段只能修改 docs/designs/ "
-                "與 .design-gate/。請先完成 design document，並由 human 執行 "
-                "`/design-gate:approve-design <task-id>`。"
+                "Design Gate: the design is not yet approved. At this stage you "
+                "may only modify docs/designs/ and .design-gate/. Please complete "
+                "the design document first and have a human run "
+                "`/design-gate:approve-design <task-id>`."
             )
         return
 
@@ -157,8 +161,9 @@ def handle_pre_tool(payload: Dict[str, Any]) -> None:
         command = str(tool_input.get("command", ""))
         if is_mutating_bash(command):
             emit_deny(
-                "Design Gate：design 尚未核准，因此阻擋明顯會修改 repository "
-                "的 Bash command。請先完成 design approval。"
+                "Design Gate: the design is not yet approved, so Bash commands "
+                "that obviously modify the repository are blocked. Please complete "
+                "design approval first."
             )
 
 def git_changed_files(project: Path) -> List[Path]:
@@ -231,8 +236,8 @@ def python_function_issues(path: Path, limit: int) -> List[str]:
 
         if count > limit:
             issues.append(
-                f"{path}:{node.lineno} `{node.name}` 約 {count} 行有效邏輯，"
-                f"超過建議上限 {limit} 行"
+                f"{path}:{node.lineno} `{node.name}` has about {count} lines of "
+                f"effective logic, exceeding the recommended limit of {limit} lines"
             )
 
     return issues
@@ -278,8 +283,9 @@ def heuristic_function_issues(path: Path, limit: int) -> List[str]:
         if active["depth"] <= 0:
             if active["count"] > limit:
                 issues.append(
-                    f"{path}:{active['start']} `{active['name']}` 約 "
-                    f"{active['count']} 行有效邏輯，超過建議上限 {limit} 行"
+                    f"{path}:{active['start']} `{active['name']}` has about "
+                    f"{active['count']} lines of effective logic, exceeding the "
+                    f"recommended limit of {limit} lines"
                 )
             active = None
 
@@ -306,12 +312,13 @@ def handle_stop(payload: Dict[str, Any]) -> None:
 
     project = project_dir(payload)
     state = load_state(project)
+    config = load_config(project)
+    if not config.get("enabled", True):  # per-project off-switch via .design-gate/config.json
+        return
     status = state.get("status", "IDLE")
 
     if status not in {"DESIGN_APPROVED", "IMPLEMENTATION"}:
         return
-
-    config = load_config(project)
     warnings = collect_warnings(project, config)
 
     state["status"] = "AWAITING_HUMAN_REVIEW"
@@ -320,17 +327,19 @@ def handle_stop(payload: Dict[str, Any]) -> None:
     warning_text = ""
     if warnings:
         warning_text = (
-            "\n\nFunction length warnings：\n- "
+            "\n\nFunction length warnings:\n- "
             + "\n- ".join(warnings[:20])
-            + "\n請依 responsibility 拆分，或確認 design 中已有合理 exception。"
+            + "\nPlease split by responsibility, or confirm the design already "
+            "documents a reasonable exception."
         )
 
     print(json.dumps({
         "decision": "block",
         "reason": (
-            "Implementation 尚未完成 human review。請顯示實際 diff、validation "
-            "結果、design deviation 與 review checklist，要求 human 查看 `git diff`，"
-            "然後由 human 執行 `/design-gate:approve-implementation <task-id>`。"
+            "Implementation has not yet completed human review. Please show the "
+            "actual diff, validation results, design deviations, and the review "
+            "checklist, ask the human to inspect `git diff`, then have the human "
+            "run `/design-gate:approve-implementation <task-id>`."
             + warning_text
         )
     }, ensure_ascii=False))
@@ -338,7 +347,10 @@ def handle_stop(payload: Dict[str, Any]) -> None:
 def normalize_task_id(raw: str) -> str:
     task = raw.strip().split()[0] if raw.strip() else ""
     if not task or not re.fullmatch(r"[A-Za-z0-9._-]+", task):
-        raise ValueError("請提供只包含英數字、dot、underscore 或 hyphen 的 task ID。")
+        raise ValueError(
+            "Please provide a task ID containing only alphanumerics, dots, "
+            "underscores, or hyphens."
+        )
     return task
 
 def find_design_document(project: Path, task_id: str) -> Path:
@@ -347,7 +359,7 @@ def find_design_document(project: Path, task_id: str) -> Path:
     candidates += sorted(design_dir.glob(f"{task_id}.md"))
     if not candidates:
         raise FileNotFoundError(
-            f"找不到 {task_id} 的 design document；預期路徑為 "
+            f"No design document found for {task_id}; expected path is "
             f"docs/designs/{task_id}-<name>.md"
         )
     return candidates[0]
@@ -364,7 +376,7 @@ def approve_design(project: Path, raw_task: str) -> None:
         "implementation_approved_at": None
     })
     save_state(project, state)
-    print(f"Design approved：{task_id} ({state['design_document']})")
+    print(f"Design approved: {task_id} ({state['design_document']})")
 
 def approve_implementation(project: Path, raw_task: str) -> None:
     task_id = normalize_task_id(raw_task)
@@ -372,19 +384,19 @@ def approve_implementation(project: Path, raw_task: str) -> None:
 
     if state.get("task_id") != task_id:
         raise ValueError(
-            f"目前 active task 是 {state.get('task_id')!r}，不是 {task_id!r}。"
+            f"The current active task is {state.get('task_id')!r}, not {task_id!r}."
         )
 
     if state.get("status") != "AWAITING_HUMAN_REVIEW":
         raise ValueError(
-            "Implementation 只能從 AWAITING_HUMAN_REVIEW 核准；"
-            f"目前狀態為 {state.get('status')}。"
+            "Implementation can only be approved from AWAITING_HUMAN_REVIEW; "
+            f"the current status is {state.get('status')}."
         )
 
     state["status"] = "COMPLETED"
     state["implementation_approved_at"] = now()
     save_state(project, state)
-    print(f"Implementation approved：{task_id}")
+    print(f"Implementation approved: {task_id}")
 
 def init_project(project: Path) -> None:
     (project / STATE_DIR).mkdir(parents=True, exist_ok=True)
@@ -399,19 +411,19 @@ def init_project(project: Path) -> None:
     if not state_path(project).exists():
         save_state(project, default_state())
 
-    print(f"Design Gate initialized：{project}")
+    print(f"Design Gate initialized: {project}")
 
 def check(project: Path) -> int:
     config = load_config(project)
     warnings = collect_warnings(project, config)
 
     if warnings:
-        print("Design Gate warnings：")
+        print("Design Gate warnings:")
         for warning in warnings:
             print(f"- {warning}")
         return 0
 
-    print("Design Gate check passed，沒有發現 function length warning。")
+    print("Design Gate check passed; no function length warnings found.")
     return 0
 
 def main(argv: Sequence[str]) -> int:
@@ -438,7 +450,7 @@ def main(argv: Sequence[str]) -> int:
             print(json.dumps(load_state(project), ensure_ascii=False, indent=2))
         elif command == "reset":
             save_state(project, default_state())
-            print("Design Gate state reset。")
+            print("Design Gate state reset.")
         else:
             print(
                 "Usage: design_gate.py "

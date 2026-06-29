@@ -1,18 +1,18 @@
 ---
 name: Approve Design
-description: Human 已 review design document 後，用來記錄明確 design approval。
+description: Used to record explicit design approval after a human has reviewed the design document.
 disable-model-invocation: true
 allowed-tools: Bash(python3 *)
 ---
 
-為 task `$ARGUMENTS` 記錄 design approval。
+Record design approval for task `$ARGUMENTS`.
 
-執行：
+Run:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/design_gate.py" approve-design "$ARGUMENTS"
 ```
 
-Approval 成功後，摘要 approved scope，然後進入 implementation。
+After approval succeeds, summarize the approved scope, then proceed to implementation.
 
-不得擴張 scope。
+Do not expand the scope.
